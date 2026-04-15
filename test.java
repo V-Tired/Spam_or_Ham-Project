@@ -28,24 +28,25 @@ public class test
        
         System.out.println("Analyzed");
 
-        // System.out.println("Top Spam Words: " + a.spamWords);
-        // System.out.println("Top Ham Words: " + a.hamWords);
+        System.out.println("Top Spam Words: " + a.spamWords);
+        System.out.println("Top Ham Words: " + a.hamWords);
 
-        // Email toCheck = emails.get(0).get(1);
-        // System.out.println("Content: " + toCheck.getContent());
-        // System.out.println("ID Number: " + toCheck.getID());
-        // System.out.println("Number of Characters: " + toCheck.getCharCount());
-        // System.out.println("Number of Words: " + toCheck.getWordCount());
-        // System.out.println("Average Word Length: " + toCheck.getAvgWordLen());
-        // System.out.println("Number of Special Characters: " + toCheck.getNumSpecialChars());
-        // System.out.println("Number of URLs: " + toCheck.getNumURLs());
-        // System.out.println("Longest Word: " + toCheck.getLongestWord());
-        // System.out.println("Spam Likelihood: " + toCheck.getSpamLikely());
-        // System.out.println("Actual: " + toCheck.spamCheck());
-        // System.out.println("Best Guess: " + toCheck.getGuess());
+        System.out.println("------------------------------------------------------------");
+        System.out.println("Sample Spam Email Analysis:");
+        Email toCheck = emails.get(0).get(1);
+        System.out.println("ID Number: " + toCheck.getID());
+
+        System.out.println("Content: " + toCheck.getContent());
+        System.out.println("Number of Characters: " + toCheck.getCharCount());
+        System.out.println("Number of Words: " + toCheck.getWordCount());
+        System.out.println("Average Word Length: " + String.format("%.2f", toCheck.getAvgWordLen()));
+        System.out.println("Number of Special Characters: " + toCheck.getNumSpecialChars());
+        System.out.println("Number of URLs: " + toCheck.getNumURLs());
+        System.out.println("Longest Word: " + toCheck.getLongestWord());
+        System.out.println("Spam Likelihood: " + toCheck.getSpamLikely());
+        System.out.println("Actual: " + toCheck.spamCheck());
+        System.out.println("Best Guess: " + toCheck.getGuess());
         
-
-
 
         eAnaylzer.toString(emails.get(0), "Spam Emails");
         eAnaylzer.toString(emails.get(1), "Ham Emails");
