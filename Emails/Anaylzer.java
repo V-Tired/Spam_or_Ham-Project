@@ -3,6 +3,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO: make sure all features are positively effecting the statistics
+//TODO: add weight distributions to each feature instead of int values 
+//TODO: Remove words > 22char or <3 char from both spam and ham top word lists 
+//TODO: Split into 80% testing, 20% analyzing
+//TODO: implement average spam and average ham Email objects for proper comparison 
+//TODO: build display (GUI?)
+
+/**
+ * 
+ */
 public class Anaylzer 
 {
     public Email averageHam;
@@ -11,7 +21,10 @@ public class Anaylzer
     public ArrayList<String> spamWords;
     public ArrayList<String> hamWords;
 
-    
+    /**
+     * Analyzes a list of emails to determine their spam likelihood.
+     * @param emails An arrayList of Email objects to be analyzed (either ham or spam))
+     */
     public void analyze(ArrayList<Email> emails)
     {
 
@@ -26,6 +39,10 @@ public class Anaylzer
         makeGuess(emails);
     }
 
+    /**
+     * Loops through emails, combines into 1 string, and counts frequency. The top 200 words are added to the spamWords arrayList.
+     * @param spamEmails an arrayList of spam Email objects. 
+     */
     public void findSpamWords(ArrayList<Email> spamEmails)
     {
         String allSpam = "";
@@ -56,6 +73,10 @@ public class Anaylzer
         
     }//topSpamWords
 
+    /**
+     * Loops through emails, combines into 1 string, and counts frequency. The top 350 words are added to the hamWords arrayList.
+     * @param hamEmails an arrayList of ham Email objects. 
+     */
     public void findHamWords(ArrayList<Email> hamEmails)
     {
         String allHam = "";
@@ -69,6 +90,7 @@ public class Anaylzer
         }
         hamWords = allHam.replaceAll("[^a-zA-Z] ", "").split(" ");
 
+        //Put all words into a HashMap along with their count
         HashMap<String, Integer> hamCounts = new HashMap<>();
         for (String word : hamWords) 
         {
@@ -77,8 +99,8 @@ public class Anaylzer
                 hamCounts.put(word, hamCounts.getOrDefault(word, 0) + 1);
             }
         }
-        
-            this.hamWords = new ArrayList<>(hamCounts.entrySet().stream()
+        //Transfer top 350 words into ArrayList for easy comparison
+        this.hamWords = new ArrayList<>(hamCounts.entrySet().stream()
             .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
             .limit(350)
             .map(Map.Entry::getKey)
@@ -87,7 +109,7 @@ public class Anaylzer
     }//topHamWords
 
     /**
-     * Remove overlapping words from both ham and spam arraylist, so that they do not affect the guess
+     * Remove overlapping words from both ham and spam ArraylLists, so that they do not affect compareWords() method.
      */
     public void normalize()
     {
@@ -104,7 +126,8 @@ public class Anaylzer
     }//normalize()
 
     /**
-     * loop through both ham and spam arraylist, check average word length, add to email's values, adjust spamLikely value of Email object if avg is not b/w 4 and 7 
+     * loop throughArrayList, check average word length, add to email's values, adjust spamLikely value of Email object if avg is not b/w 4 and 7 
+     * @param emails The ArrayList of Email objects to check.
      */
     public void averageWordLength(ArrayList<Email> emails)
     {
@@ -124,9 +147,12 @@ public class Anaylzer
             if (average > 7 || average < 4)
                 current.updateSpamLikely(1);
         }
-
     }//averageWordLength()
 
+    /**
+     * Checks the number of special characters in a given email and adjust the spamLikely value 
+     * @param emails The ArrayList of Email objects to check.
+     */
     public void specialCharCount(ArrayList<Email> emails)
     {
         //calculate
@@ -139,7 +165,10 @@ public class Anaylzer
         }
     }//specialCharCount()
 
-    //check if top spam words are in particular email, add to spamLikely for every 2
+    /**
+     * Check if top spam words are in each email, add to spamLikely value
+     * @param emails The ArrayList of Email objects to check.
+     */
     public void compareWords(ArrayList<Email> emails)
     {
         for (int i = 0; i < emails.size(); i++)
@@ -153,6 +182,10 @@ public class Anaylzer
         }
     }//compareWords()
 
+    /**
+     * Loop through each Email object and check its longest word. Update Email's longest word, adjust spamLikely value if more than 22 characters and again if more than 4 of those words. 
+     * @param emails The ArrayList of Email objects to check.
+     */
     public void longestWord(ArrayList<Email> emails)
     {
         //calculate
@@ -176,9 +209,12 @@ public class Anaylzer
             if (longCount > 4)
                 current.updateSpamLikely(1);
         }
-        //find longest word in email. if >22char ignoring urls, add to spamLikely
     }//longestWord()
 
+    /**
+     * Loop through Email objects, check for number of occurrences of single character entries. Adjust spamLikely value if over 60 or 0. 
+     * @param emails The ArrayList of Email objects to check.
+     */
     public void shortestWordCount(ArrayList<Email> emails)
     {
         //calculate
@@ -201,7 +237,8 @@ public class Anaylzer
     }//shortestWordCount()
 
     /**
-     *  count number of URL occurences, adjust email numURL, add to spamLikely 
+     *  Count number of URL occurences, adjust email numURL, add to spamLikely 
+     * @param email The ArrayList of Email objects to check.
      */
     public void urlCount(ArrayList<Email> emails)
     {
@@ -221,9 +258,12 @@ public class Anaylzer
             if (current.getNumURLs() > 1)
                 current.updateSpamLikely(1);
         }
-        
     }//urlCount()
 
+    /**
+     * Loop through Email object array, check word count for each email, adjust spamLikely value if count is between 30 and 100
+     * @param emails The ArrayList of Email objects to check.
+     */
     public void wordCountCheck(ArrayList<Email> emails)
     {
         for(int i = 0; i< emails.size();i++)
@@ -232,13 +272,13 @@ public class Anaylzer
 
             if (30 < count &&  count < 100)
                 emails.get(i).updateSpamLikely(2);
-
-            // if (count > 1000)
-            //     emails.get(i).updateSpamLikely(3);
-    
         }
-    }
+    }//wordCountCheck()
 
+    /**
+     * Loop through Email objects, check spamLikely value, mark as Spam if > 7 or ham otherwise. 
+     * @param emails The ArrayList of Email objects to check.
+     */
     public void makeGuess(ArrayList<Email> emails)
     {
         for (int i = 0; i< emails.size();i++)
@@ -248,6 +288,5 @@ public class Anaylzer
             else
                 emails.get(i).updateGuess(false);
         }
-        //make educated guess based on spamLikely value, add to Email object
     }//makeGuess()
 }//Analyzer

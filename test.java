@@ -10,8 +10,7 @@ public class test
 {
     public static void main(String[] args) 
     {
-        Email email;
-
+        // Email email;
         EmailFactory factory = new EmailFactory();
         ArrayList<ArrayList<Email>> emails = factory.readCSVFile("spam_or_not_spam.csv");
 
