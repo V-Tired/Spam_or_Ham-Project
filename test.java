@@ -115,5 +115,9 @@ public class test
         //Close printWriters
         d.close();
 
+        d.view(completeList);
+
+
+
     }//main()
 }//test

@@ -136,6 +136,7 @@ public class Display
     public void view (ArrayList<ArrayList<Email>> emails)
     {
         ArrayList<Email> data;
+        String formatted;
         Scanner in = new Scanner(System.in);
         System.out.println("Would you like to view a spam or ham email?");
         String choice = in.nextLine();
@@ -148,16 +149,29 @@ public class Display
         System.out.println("Please enter the number of the email you would like to view: " );
         int id = in.nextInt()-1;
 
-        System.out.println(data.get(id).getID());
-        System.out.println(data.get(id).getWordCount());
-        System.out.println(data.get(id).getAvgWordLen());
-        System.out.println(data.get(id).getDistFromHam());
-        System.out.println(data.get(id).getDistFromSpam());
-        System.out.println(data.get(id).getCharCount());
-        System.out.println(data.get(id).getNumSpamWords());
-        System.out.println(data.get(id).getNumSpecialChars());
-        System.out.println(Arrays.toString(data.get(id).zScoreHam));
-        System.out.println(Arrays.toString(data.get(id).zScoreSpam));
+        System.out.println("ID: " + data.get(id).getID());
+        System.out.println("Word Count: " + data.get(id).getWordCount());
+        System.out.println("Average Word Length: " + String.format("%.2f",data.get(id).getAvgWordLen()));
+        System.out.println("Distance from Ham: " + String.format("%.2f",data.get(id).getDistFromHam()));
+        System.out.println("Distance from Spam: " + String.format("%.2f",data.get(id).getDistFromSpam()));
+        System.out.println("Character Count: " + data.get(id).getCharCount());
+        System.out.println("Number of Spam Words: " + data.get(id).getNumSpamWords());
+        System.out.println("Number of Special Characters: " + data.get(id).getNumSpecialChars());
+        System.out.println("----------------------------------------------");
+        System.out.println("Z distance from Average Ham Email");
+        System.out.println("NumSpamWords, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt: ");
+        formatted = Arrays.stream(data.get(id).zScoreHam)
+                    .mapToObj(d -> String.format("%.2f", d))
+                    .collect(Collectors.joining(", ", "[", "]"));
+        System.out.println(formatted);
+        System.out.println("----------------------------------------------");
+        System.out.println("Z distance from Average Spam Email");
+        System.out.println("NumSpamWords, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt: ");
+        formatted = Arrays.stream(data.get(id).zScoreSpam)
+                    .mapToObj(d -> String.format("%.2f", d))
+                    .collect(Collectors.joining(", ", "[", "]"));
+        System.out.println(formatted);
+        System.out.println("Guess: " + data.get(id).getGuess());
 
     }
 
