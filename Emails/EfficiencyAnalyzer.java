@@ -2,21 +2,20 @@ package Emails;
 
 import java.util.ArrayList;
 
-public class EfficiencyAnaylzer 
+public class EfficiencyAnalyzer 
 {
     int correct;
 
     public int compare(ArrayList<Email> emails)
     {
-
-    correct = 0;
-    for (int i = 0; i < emails.size(); i++)
-    
-        if (emails.get(i).getGuess() == emails.get(i).spamCheck())
-        {
-            correct++;
-        }
-    return correct;
+        correct = 0;
+        for (int i = 0; i < emails.size(); i++)
+        
+            if (emails.get(i).getGuess() == emails.get(i).isSpam())
+            {
+                correct++;
+            }
+        return correct;
     }//compare()
 
     public void toString(ArrayList<Email> emails, String type)

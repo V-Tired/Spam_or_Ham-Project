@@ -1,0 +1,46 @@
+Average Training Ham Values
+-----------------------------
+Average Word Count: 217.11
+Average Word Length: 4.67
+Average Character Count: 1239.02
+Average Longest Word: 22.73
+Average Special Character Count: 15.00
+Average Number of URLs: 3.00
+Average Spam Word Count: 0.50
+
+Standard Deviations for Average Training Ham Values:
+NumSpamWords, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt: 
+[0.89, 557.28, 3.30, 25.42, 17.05, 44.73, 0.48, 3346.99, 25.98]
+
+Variance for Average Training Ham Values:
+NumSpamWords, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt: 
+[0.79, 310400.16, 10.90, 645.81, 290.58, 1999.41, 0.23, 11196763.79, 674.59]
+--------------------------------------------------
+
+Average Training Spam Values
+-----------------------------
+Average Word Count: 362.99
+Average Word Length: 5.19
+Average Character Count: 2549.78
+Average Longest Word: 21.01
+Average Special Character Count: 29.76
+Average Number of URLs: 3.96
+Average Spam Word Count: 2.95
+
+Standard Deviations for Average Training Spam Values:
+NumSpamWords, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt: 
+[2.60, 576.06, 3.44, 25.61, 17.14, 54.72, 0.71, 3594.62, 29.88]
+
+Variance for Average Training Spam Values:
+NumSpamWords, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt: 
+[6.78, 331682.59, 11.83, 655.52, 293.53, 2993.30, 0.50, 12914862.12, 892.50]
+--------------------------------------------------
+
+Top 10 Spam Words: 
+hyperlink please click report name order receive address program million 
+
+Features by Average Difference: 
+numSpecialChars: 14.76, characterCt: 1310.76, numSpamWords: 2.45, wordCount: 145.89, longCount: 31.53, numURLs: 0.96, longestWord: 1.72, shortCount: 3.12, avgWordLen: 0.52, 
+
+Weights by Difference Value: 
+numSpecialChars: 0.13, characterCt: 0.20, wordCount: 0.20, numSpamWords: 0.06, longCount: 0.15, longestWord: 0.06, numURLs: 0.05, shortCount: 0.10, avgWordLen: 0.05, 

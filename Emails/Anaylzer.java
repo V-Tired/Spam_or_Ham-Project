@@ -1,16 +1,14 @@
 package Emails;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO: make sure all features are positively effecting the statistics
-//TODO: add weight distributions to each feature instead of int values 
 //TODO: build display (GUI?)
-//TODO: calculate both ham and spam values, check which closer to, etc 
 //DUE APRIL 30
 
 /**
- * 
+ * Performs all Calculations related to Email object features
  */
 public class Anaylzer 
 {
@@ -19,6 +17,8 @@ public class Anaylzer
 
     public ArrayList<String> spamWords;
     public ArrayList<String> hamWords;
+    public HashMap<String, Double> weights;
+    public HashMap<String, Double> w;
 
 
     /**
@@ -27,20 +27,23 @@ public class Anaylzer
      */
     public void analyze(ArrayList<Email> emails, String classification, boolean testing)
     {
+        //Call all calculations
         averageWordLength(emails, classification, testing);
         urlCount(emails, classification, testing);
         longestWord(emails, classification, testing);
         specialCharCount(emails, classification, testing);
-        shortestWordCount(emails, classification, testing);
+        shortWordCount(emails, classification, testing);
         averageCharCount(emails, classification, testing);
         averageWordCount(emails, classification, testing);
+        countSpamWords(emails, classification, testing);
 
-        compareEach(emails);
-        makeGuess(emails, classification, testing); 
-
-        // if (testing == true)
-        //     compareEach(emails);
-    }
+        //Calculate Standard Deviation for Training Data Only
+        if (testing == false)
+        {
+            callStDev(emails, averageSpam);
+            callStDev(emails, averageHam);
+        }
+    }//analyze()
 
     /**
      * Loops through emails, combines into 1 string, and counts frequency. The top 200 words are added to the spamWords arrayList.
@@ -49,7 +52,7 @@ public class Anaylzer
     public void findSpamWords(ArrayList<Email> spamEmails)
     {
         String allSpam = "";
-        String[] spamWords;
+        String[] spamWord;
 
         //Loop through all spam emails and combine into 1 big string
         for (int i = 0; i< spamEmails.size();i++)
@@ -57,10 +60,10 @@ public class Anaylzer
             Email temp  = spamEmails.get(i);
             allSpam += temp.getContent();
         }
-        spamWords = allSpam.replaceAll("[^a-zA-Z] ", "").split(" ");
+        spamWord = allSpam.replaceAll("[^a-zA-Z] ", "").split(" ");
 
         HashMap<String, Integer> spamCounts = new HashMap<>();
-        for (String word : spamWords) 
+        for (String word : spamWord) 
         {
             if (!word.isEmpty()) 
             {
@@ -91,7 +94,7 @@ public class Anaylzer
             Email temp  = hamEmails.get(i);
             allHam += temp.getContent();
         }
-        hamWords = allHam.replaceAll("[^a-zA-Z] ", "").split(" ");
+        hamWords = allHam.replaceAll("[^a-zA-Z] ", " ").split(" ");
 
         //Put all words into a HashMap along with their count
         HashMap<String, Integer> hamCounts = new HashMap<>();
@@ -147,9 +150,41 @@ public class Anaylzer
         }
         this.averageHam = new Email(false);
         this.averageSpam = new Email(true);
-        this.averageHam.setContent(hamWords.toArray(new String[0]));
-        this.averageSpam.setContent(spamWords.toArray(new String[0]));
+        this.averageHam.setContent(hamWords.toArray(String[]::new));
+        this.averageSpam.setContent(spamWords.toArray(String[]::new));
     }//normalize()
+
+    public void countSpamWords(ArrayList<Email> emails, String name, boolean testing)
+    {   
+        double avgCount = 0.0;
+        for (int i = 0; i< emails.size();i++)
+        {
+            Email current = emails.get(i);
+
+            //Check for Spam Words
+            ArrayList<String> spamCheck = new ArrayList<>(spamWords.subList(0, 10));
+            
+            double count = 0.0;
+
+            for (int j = 0; j < spamCheck.size(); j++)
+            {
+                if (current.getContent().contains(spamCheck.get(j)))
+                    count ++;    
+            }
+            current.updateSpamWordCt(count);
+            avgCount += count;
+        }
+        avgCount = avgCount/ (emails.size());
+
+        if (testing == false)
+        {
+            if (name.contentEquals("spam"))
+                this.averageSpam.updateSpamWordCt(avgCount);
+            else
+                this.averageHam.updateSpamWordCt(avgCount);
+        }
+        
+    }//countSpamWords
 
     /**
      * loop throughArrayList, check average word length, add to email's values, adjust spamLikely value of Email object if avg is not b/w 4 and 7 
@@ -175,7 +210,7 @@ public class Anaylzer
         }
         totalAvg = totalAvg/emails.size();
 
-        if (testing ==false)
+        if (testing == false)
         {
             if (classification.contentEquals("spam"))
                 this.averageSpam.updateAvgWordLen(totalAvg);
@@ -221,7 +256,7 @@ public class Anaylzer
             average += current.getCharCount();
         }
         average = average/emails.size();
-if (testing == false)
+        if (testing == false)
         {
             if (classification.contentEquals("spam"))
                 this.averageSpam.updateNumChars(average);
@@ -241,7 +276,7 @@ if (testing == false)
             average += current.getWordCount();
         }
         average = average/emails.size();
-if (testing == false)
+        if (testing == false)
         {
             if (classification.contentEquals("spam"))
                 this.averageSpam.updateWordCount(average);
@@ -257,6 +292,7 @@ if (testing == false)
     {
         //calculate
         double avgLongCt = 0.0;
+        double avgLongest = 0.0;
         for(int i = 0; i< emails.size();i++)
         {
             Email current = emails.get(i);
@@ -268,31 +304,35 @@ if (testing == false)
             {
                 if (words[j].length() > longest)
                     longest = words[j].length();
-                if (longest > 20)
+                if (longest > 22)
                     longCount++;
                 current.longestWord = longest;
+                
             }
             current.longCount = longCount;
             avgLongCt += longCount;
+            avgLongest += longest;
         }
         avgLongCt = avgLongCt/emails.size();
+        avgLongest = avgLongest/emails.size();
 
         if (testing == false)
         {
             if (classification.contentEquals("spam"))
-                this.averageSpam.longCount = avgLongCt;
+            {   this.averageSpam.longCount = avgLongCt;
+                this.averageSpam.longestWord = avgLongest;
+            }
             else if (classification.contentEquals("ham"))
-                this.averageHam.longCount = avgLongCt;
+               { this.averageHam.longCount = avgLongCt;
+                this.averageHam.longestWord = avgLongest;}
         }    
-        
-
     }//longestWord()
 
     /**
-     * Loop through Email objects, check for number of occurrences of single character entries. Adjust spamLikely value if over 60 or 0. 
+     * Loop through Email objects, check for number of occurrences of single character entries.
      * @param emails The ArrayList of Email objects to check.
      */
-    public void shortestWordCount(ArrayList<Email> emails, String classification, boolean testing)
+    public void shortWordCount(ArrayList<Email> emails, String classification, boolean testing)
     {
         //calculate
         double avgShortCt = 0.0;
@@ -301,10 +341,10 @@ if (testing == false)
             Email current = emails.get(i);
             String[] words = current.getContent().split(" ");
             int shortCount = 0;
-            for (int j = 0; j< words.length;j++)
-            {
-                if (words[j].length() == 1)
+            for (String word : words) {
+                if (word.length() == 1) {
                     shortCount++;
+                }
             }
             avgShortCt += shortCount;
             current.updateShortCount(shortCount);
@@ -353,84 +393,351 @@ if (testing == false)
         }
     }//urlCount()
 
+    public void setWeights()
+    //indexes = 0: SpamWordCt, 1: WordCt, 2: URLCt, 3: ShortCt, 4: LongestWord, 5: LongCt, 6: AvgWordLen, 7: CharCt, 8:SpecialCharCt
+    {
+        double a = Math.abs(this.averageHam.getNumSpamWords() - this.averageSpam.getNumSpamWords());
+        double b = Math.abs(this.averageHam.getWordCount() - this.averageSpam.getWordCount());
+        double c = Math.abs(this.averageHam.getNumURLs() - this.averageSpam.getNumURLs());
+        double d = Math.abs(this.averageHam.shortCount - this.averageSpam.shortCount);
+        double e = Math.abs(this.averageHam.longestWord - this.averageSpam.longestWord);
+        double f = Math.abs(this.averageHam.longCount - this.averageSpam.longCount);
+        double g = Math.abs(this.averageHam.getAvgWordLen() - this.averageSpam.getAvgWordLen());
+        double h = Math.abs(this.averageHam.getCharCount() - this.averageSpam.getCharCount());
+        double i = Math.abs(this.averageHam.getNumSpecialChars() - this.averageSpam.getNumSpecialChars());
+
+        w = new HashMap<>();
+
+        w.put("numSpamWords", a);
+        w.put("wordCount", b);
+        w.put("numURLs", c);
+        w.put("shortCount", d);
+        w.put("longestWord", e);
+        w.put("longCount", f);
+        w.put("avgWordLen", g);
+        w.put("characterCt", h);
+        w.put("numSpecialChars", i);
+
+        ArrayList<String> w2 = new ArrayList<>(w.entrySet().stream()
+            .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+            .map(Map.Entry::getKey)
+            .toList());
+
+        double [] nums = {.2, .2, .15, .13, .1, .06, .06, .05, .05};
+
+        //Finalize With Appropriate Names
+        this.weights = new HashMap<>();
+        for (int j = 0; j< nums.length; j++)
+        {
+            this.weights.put(w2.get(j), nums[j]);
+        }
+
+    }//setWeights()
+
     /**
      * Loop through Email objects, calculate spamLikely value, mark as Spam if > 7 or ham otherwise. 
      * @param emails The ArrayList of Email objects to check.
      */
-    public void makeGuess(ArrayList<Email> emails, String classification, boolean testing)
+    public void calculateZScores(ArrayList<Email> emails, String distanceFrom, boolean testing)
+    {
+        //Update ZScores for each of 9 characteristics
+        Email current;
+        Email compareTo;
+        double[] zscore;
+        double[] avgZscore = new double[9];
+        Arrays.fill(avgZscore, 0);
+
+        for (int i = 0; i < emails.size(); i++)
+        {
+            current = emails.get(i);
+            if (distanceFrom.contentEquals("ham"))
+            {
+                zscore = current.zScoreHam;
+                avgZscore = this.averageHam.zScoreHam;
+                compareTo = this.averageHam;
+
+            }
+            else
+            {
+                zscore = current.zScoreSpam;
+                avgZscore = this.averageSpam.zScoreSpam;
+                compareTo = this.averageSpam;
+            }
+
+            //Z score of Spam Word Count
+            double f0 =(current.getNumSpamWords() - compareTo.getNumSpamWords());
+            f0 = f0/compareTo.standardDeviations[0];
+            zscore[0] = f0;
+            avgZscore[0] += f0;
+        
+            //Z score of Word Count
+            double f1 = (current.getWordCount() - compareTo.getWordCount());
+            f1 = f1/compareTo.standardDeviations[1];
+            zscore[1]= f1;
+            avgZscore[1] += f1;
+
+            //Z score of URL count
+            double f2 = (current.getNumURLs() - compareTo.getNumURLs());
+            f2 = f2/compareTo.standardDeviations[2];
+            zscore[2]= f2;
+            avgZscore[2] += f2;
+
+            //Z score of Short Words (1 character)
+            double f3 = (current.shortCount - compareTo.shortCount);
+            f3 = f3/compareTo.standardDeviations[3];
+            zscore[3]= f3;
+            avgZscore[3] += f3;
+
+            //Z score of Longest Word Length
+            double f4 = (current.longestWord - compareTo.longestWord);
+            f4 = f4/compareTo.standardDeviations[4];
+            zscore[4]= f4;
+            avgZscore[4] += f4;
+
+            //Z score of long word count
+            double f5 = (current.longCount - compareTo.longCount);
+            f5 = f5/compareTo.standardDeviations[5];
+            zscore[5]= f5;
+            avgZscore[5] += f5;
+            
+            //Z score of Average Word Length
+            double f6 = (current.getAvgWordLen() - compareTo.getAvgWordLen());
+            f6 = f6/compareTo.standardDeviations[6];
+            zscore[6]= f6;
+            avgZscore[6] += f6;
+           
+            //Z score of Character Count
+            double f7 = (current.getCharCount() - compareTo.getCharCount());
+            f7 = f7/compareTo.standardDeviations[7];
+            zscore[7]= f7;
+            avgZscore[7] += f7;
+
+            //Z score of Special Character Count
+            double f8 = (current.getNumSpecialChars() - compareTo.getNumSpecialChars());
+            f8 = f8/compareTo.standardDeviations[8];
+            zscore[8]= f8;
+            avgZscore[8] += f8;
+
+            //Average the Avg Email ZScores on last loop
+            if (i == emails.size()-1)
+            {
+               for (int j = 0; j < avgZscore.length; j++)
+                    avgZscore[j] = (avgZscore[j])/emails.size(); 
+            }
+        }
+    }//calculateZScores()
+    
+    public void calculateEuclidDistance(ArrayList<Email> emails, String distanceFrom, boolean testing){
+        
+       Email current;
+    double distance;
+    double totalDistance = 0;
+
+    for (int i = 0; i < emails.size(); i++)
+    {
+        current = emails.get(i);
+
+        double[] z;
+
+        if (distanceFrom.equals("ham"))
+            z = current.zScoreHam;
+        else
+            z = current.zScoreSpam;
+
+        distance = 0;
+        
+        for (int j = 0; j < z.length; j++)
+        {
+            double weight = this.weights.get(getFeatureName(j));
+            distance += Math.pow(z[j], 2) * weight;
+        }
+
+        distance = Math.sqrt(distance);
+        totalDistance += distance;
+
+        if (distanceFrom.equals("ham"))
+            current.updateHamDist(distance);
+        else
+            current.updateSpamDist(distance);
+    }
+
+    double avg = totalDistance / emails.size();
+
+    if (!testing)
+    {
+        if (distanceFrom.equals("ham"))
+            this.averageHam.updateHamDist(avg);
+        else
+            this.averageSpam.updateSpamDist(avg);
+    }
+
+}//calculateEuclidDistance()
+
+    public String getFeatureName(int identifier)
+    {
+        return switch (identifier) 
+        {
+            case 0 -> "numSpamWords";
+            case 1 -> "wordCount";
+            case 2 -> "numURLs";
+            case 3 -> "shortCount";
+            case 4 -> "longestWord";
+            case 5 -> "longCount";
+            case 6 -> "avgWordLen";
+            case 7 -> "characterCt";
+            case 8 -> "numSpecialChars";
+            default -> "";
+        };
+    }
+
+    public void callStDev(ArrayList<Email> emails, Email hamOrSpam)
+    { 
+        //0: SpamWordCt, 1: WordCt, 2: URLCt, 3: ShortCt, 4: LongestWord, 5: LongCt, 6: AvgWordLen, 7: CharCt, 8:SpecialCharCt
+        hamOrSpam.standardDeviations[0] = calcStDev(emails, hamOrSpam, 1);
+        hamOrSpam.standardDeviations[1] = calcStDev(emails, hamOrSpam, 2);
+        hamOrSpam.standardDeviations[2] = calcStDev(emails, hamOrSpam, 3);
+        hamOrSpam.standardDeviations[3] = calcStDev(emails, hamOrSpam, 4);
+        hamOrSpam.standardDeviations[4] = calcStDev(emails, hamOrSpam, 5);
+        hamOrSpam.standardDeviations[5] = calcStDev(emails, hamOrSpam, 6);
+        hamOrSpam.standardDeviations[6] = calcStDev(emails, hamOrSpam, 7);
+        hamOrSpam.standardDeviations[7] = calcStDev(emails, hamOrSpam, 8);
+        hamOrSpam.standardDeviations[8] = calcStDev(emails, hamOrSpam, 9);
+
+    }//callStDev();
+
+    public double calcStDev(ArrayList<Email> emails, Email hamOrSpam, int switchCase)
+    {   
+        double result = 0.0;
+        double deviation;
+        switch(switchCase)
+        {//SpamWordCt, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt
+            case 1 -> {
+                //SpamWordCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).getNumSpamWords() - hamOrSpam.getNumSpamWords()),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[0] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+                
+            case 2 -> {
+                //WordCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).getWordCount() - hamOrSpam.getWordCount()),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[1] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+                
+            case 3 -> {
+                //URLCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).getNumURLs() - hamOrSpam.getNumURLs()),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[2] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+
+            case 4 -> {
+                //ShortCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).shortCount - hamOrSpam.shortCount),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[3] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+
+            case 5 -> {
+                //LongestWord
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).longestWord - hamOrSpam.longestWord),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[4] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+    
+            case 6 -> {
+                //LongCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).longCount - hamOrSpam.longCount),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[5] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+
+            case 7 -> {
+                //AvgWordLen
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).getAvgWordLen() - hamOrSpam.getAvgWordLen()),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[6] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+
+            case 8 -> {
+                //CharCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).getCharCount() - hamOrSpam.getCharCount()),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[7] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+
+            case 9 -> {
+                //SpecialCharCt
+                for (int i = 0; i < emails.size(); i++)
+                {
+                    deviation = Math.pow((emails.get(i).getNumSpecialChars()- hamOrSpam.getNumSpecialChars()),2);
+                    result += deviation;
+                }
+                hamOrSpam.variances[8] = result/emails.size();
+                result = Math.sqrt(result/(emails.size()-1));
+                return result;
+            }
+            
+            default -> {
+                return result;
+            }
+        }
+        //SpamWordCt, WordCt, URLCt, ShortCt, LongestWord, LongCt, AvgWordLen, CharCt, SpecialCharCt
+            }//calcStDev
+
+    public void guess(ArrayList<Email> emails)
     {
         Email current;
-        double averageLikely = 0;
-
         for (int i = 0; i< emails.size();i++)
         {
             current = emails.get(i);
-
-            //Check for Spam Words
-            ArrayList<String> spamCheck = new ArrayList<>(spamWords.subList(0, 10));
-            for (int j = 0; j < spamCheck.size(); j++)
-            {
-                if (current.getContent().contains(spamCheck.get(j)))
-                    current.updateSpamLikely(2);
-            }
-        
-            //Check Word Count
-            if (current.getWordCount() > this.averageHam.getWordCount())
-                emails.get(i).updateSpamLikely(2);
-
-            //Check URL count
-            if (current.getNumURLs() > this.averageHam.getNumURLs())
-                current.updateSpamLikely(.5);
-
-            //Check number of Short Words (1 character)
-            if (current.shortCount < this.averageHam.shortCount)
-                current.updateSpamLikely(1);
-            if (current.shortCount < 1)
-                current.updateSpamLikely(2);
-
-            //Check Longest Word Length and Number of Long Words
-            if (current.longestWord > this.averageHam.getLongestWord())
-                current.updateSpamLikely(2);
-            if (current.longCount > averageHam.longCount)
-                current.updateSpamLikely(1);
-            
-            //Check Average Word Length
-            if (current.getAvgWordLen() > this.averageHam.getAvgWordLen())
-                current.updateSpamLikely(1);
-           
-            //Check Average Character Count
-            if (current.getCharCount()>= averageSpam.getCharCount())
-                    current.updateSpamLikely(1);
-
-            averageLikely += current.getSpamLikely();
-
-            //Make final guess based on SpamLikely value
-            double diff = averageSpam.getSpamLikely() - averageHam.getSpamLikely();
-
-            if (current.getSpamLikely() >= diff)
+            //Make final guess based on SpamLikely and HamLikely values
+            if (current.getDistFromSpam() < current.getDistFromHam())
                 current.updateGuess(true);
             else
                 current.updateGuess(false);
         }
-        averageLikely = averageLikely/emails.size();
-        if (testing == false)
-        {
-            if (classification.contentEquals("spam"))
-                this.averageSpam.updateSpamLikely(averageLikely);
-            else if (classification.contentEquals("ham"))
-                this.averageHam.updateSpamLikely(averageLikely);
-        }
-
-    }//makeGuess()
-
-
-    public void compareEach(ArrayList<Email> emails)
-    {   for(int i = 0; i< emails.size();i++)
-        {
-            Email current = emails.get(i);
-            current.compareToHam(this.averageHam);
-            current.compareToSpam(this.averageSpam);
-        }
-    }//compareEach()
+    }//guess()
 
 }//Analyzer

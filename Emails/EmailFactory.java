@@ -17,40 +17,39 @@ public class EmailFactory
         try (Scanner scanner = new Scanner(file))
         {
             int id = 1;
-            scanner.next();
             boolean isSpam;
             String[] splitContent;
 
             while (scanner.hasNext())
            {
                 String contents = scanner.nextLine();
-                String[] split = contents.split(",");
+                String[] split = contents.split(",",2);
                 
                 int wordCount = split[0].split(" ").length;
-                int charCount = contents.length()-2;
+                String text = split[0];
+                int charCount = text.length();
                 int numSpecialChars = split[0].replaceAll("[a-zA-Z0-9\\s]", "").length();
 
-                if (split.length > 1 && split[1].contains("0"))
-                    isSpam = false;
-                else
-                    isSpam = true;
+                isSpam = !(split.length > 1 && split[1].contains("0"));
 
                 int numURL = 0;
 
-                splitContent = contents.split(",");
-                splitContent = splitContent[0].split(" ");
+               
+                splitContent = split[0].split(" ");
 
 
                 Email email = new Email(id, wordCount, charCount, contents, splitContent, numURL, numSpecialChars, isSpam);
 
-                if (email.spamCheck() == true)
+                if (email.isSpam() == true)
                     spam.add(email);
                 else
                     ham.add(email);
 
-                id = id + 1;
+                id += 1;
            }
-            scanner.close();   
+            scanner.close();
+            
+            //Add both ArrayLists of Emails to an ArrayList
             emailsArrayList.add(spam);
             emailsArrayList.add(ham);
             return emailsArrayList;   
@@ -59,9 +58,7 @@ public class EmailFactory
         catch (FileNotFoundException e)
         {
             System.out.println("File not found.");
-            return null;
+            return new ArrayList<>();
         }
-        
     }//readCSVFile()
-
 }//EmailFactory
